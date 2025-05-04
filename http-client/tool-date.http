@@ -1,0 +1,25 @@
+###
+# @name Cria TOOL - Date
+POST http://localhost:8080/api/v1/rag
+Accept: application/problem+json
+Content-Type: application/json
+
+{
+  "meta": {
+    "name": "date",
+    "type": "TOOL"
+  },
+  "fact": "data e hora atuais"
+}
+
+###
+# @name Consulta Date
+POST http://localhost:8080/api/v1/llm
+Accept: application/json, application/problem+json
+Content-Type: application/json
+
+{
+  "details": false,
+  "query": "Que horas são?",
+  "use_cache": false
+}

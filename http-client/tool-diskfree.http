@@ -1,0 +1,25 @@
+###
+# @name Cria TOOL - Disk Free
+POST http://localhost:8080/api/v1/rag
+Accept: application/problem+json
+Content-Type: application/json
+
+{
+  "meta": {
+    "name": "df",
+    "type": "TOOL"
+  },
+  "fact": "espaço livre em disco"
+}
+
+###
+# @name Consulta Disk Free
+POST http://localhost:8080/api/v1/llm
+Accept: application/json, application/problem+json
+Content-Type: application/json
+
+{
+  "details": false,
+  "query": "Quanto de disco livre voce tem?",
+  "use_cache": false
+}

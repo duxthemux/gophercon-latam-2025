@@ -1,0 +1,57 @@
+###
+# @name Cria Fato Tubaina do Brasil
+POST http://localhost:8080/api/v1/rag
+Accept: application/problem+json
+Content-Type: application/json
+
+{
+  "meta": {},
+  "fact": "A Tubaina do Brasil é a maior empresa de tubainas jamais criada no Brasil."
+}
+
+###
+# @name Cria Fato 1o Semestre
+POST http://localhost:8080/api/v1/rag
+Accept: application/problem+json
+Content-Type: application/json
+
+{
+  "meta": {},
+  "fact": "Tubaina do Brasil vende 1M de Reais no 1o semestre de 2024"
+}
+
+###
+# @name Cria Fato 2o Semestre
+POST http://localhost:8080/api/v1/rag
+Accept: application/problem+json
+Content-Type: application/json
+
+{
+  "meta": {},
+  "fact": "Tubaina do Brasil vende 2M de Reais no 2o semestre de 2024"
+}
+
+
+###
+# @name Consulta Fatos Criados
+POST http://localhost:8080/api/v1/llm
+Accept: application/json, application/problem+json
+Content-Type: application/json
+
+{
+  "details": false,
+  "query": "Quem é Tubaina do Brasil?",
+  "use_cache": false
+}
+
+###
+# @name Consulta Fatos Criados II
+POST http://localhost:8080/api/v1/llm
+Accept: application/json, application/problem+json
+Content-Type: application/json
+
+{
+  "details": false,
+  "query": "Quanto a Tubaina do Brasil faturou em 2024?",
+  "use_cache": false
+}

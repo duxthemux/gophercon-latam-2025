@@ -1,0 +1,25 @@
+###
+# @name Cria TOOL - Ifconfig
+POST http://localhost:8080/api/v1/rag
+Accept: application/problem+json
+Content-Type: application/json
+
+{
+  "meta": {
+    "name": "ifconfig",
+    "type": "TOOL"
+  },
+  "fact": "informações sobre seus dispositivos de rede e endereço IP"
+}
+
+###
+# @name Consulta Hostname
+POST http://localhost:8080/api/v1/llm
+Accept: application/json, application/problem+json
+Content-Type: application/json
+
+{
+  "details": false,
+  "query": "Qual seu endereço IP?",
+  "use_cache": false
+}

@@ -1,0 +1,62 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+
+exporters:
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    resource_to_telemetry_conversion:
+      enabled: true
+
+  debug:
+    verbosity: detailed
+
+  loki:
+    endpoint: "http://loki:3100/loki/api/v1/push"
+    tls:
+      insecure: true
+    default_labels_enabled:
+      exporter: true
+      job: true
+
+  otlphttp:
+    endpoint: http://loki:3100/otlp
+
+  otlp:
+    endpoint: "tempo:4319"
+    tls:
+      insecure: true
+
+processors:
+  batch: { }
+  transform:
+    error_mode: ignore
+    log_statements:
+      - set(log.severity_text, "FAIL") where log.body == "request failed"
+      - replace_all_matches(log.attributes, "/user/*/list/*", "/user/{userId}/list/{listId}")
+      - replace_all_patterns(log.attributes, "value", "/account/\\d{4}", "/account/{accountId}")
+      - set(log.body, log.attributes["http.route"])
+
+service:
+  telemetry:
+    metrics:
+      level: detailed
+
+
+  pipelines:
+    traces:
+      receivers: [ otlp ]
+      processors: [ batch ]
+      exporters: [ otlp ]
+
+    metrics:
+      receivers: [ otlp ]
+      processors: [ batch ]
+      exporters: [ prometheus ]
+
+    logs:
+      receivers: [ otlp ]
+      processors: [ transform, batch ]
+      exporters: [ otlphttp, debug ]

@@ -1,0 +1,10 @@
+Avalie a pergunta e identifique se há referencia de periodo de tempo ou data de inicio e fim.
+Se houver, retorne como JSON - mas apenas o string JSON valido, nada mais.
+Data de inicio deve ser propriedade ini,
+data fim propriedade end,
+ambas em formato RFC3339.
+Se nao encontra-las, retorne as datas de 01-Jan do ano vigente e 31-12 do ano vigente.
+Se o periodo fizer menção a um mes ou semana, considere INI como 1o dia do periodo e END o ultimo dia do periodo.
+O nome das propriedades deve ser sempre em minúsculas.
+
+Pergunta:
