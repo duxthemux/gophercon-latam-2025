@@ -21,12 +21,12 @@ import (
 
 	"gophercon-2025/cmd/api/api"
 	"gophercon-2025/cmd/api/cache"
+	"gophercon-2025/cmd/api/env"
 	"gophercon-2025/cmd/api/llm"
 	"gophercon-2025/cmd/api/rag"
 	"gophercon-2025/cmd/api/telemetry"
 	"gophercon-2025/cmd/api/tokenizer"
 	"gophercon-2025/cmd/api/tool"
-	"gophercon-2025/pkg/env"
 )
 
 func run(ctx context.Context, f *flags) (err error) {

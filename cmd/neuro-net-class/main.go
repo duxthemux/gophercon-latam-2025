@@ -11,27 +11,36 @@ import (
 
 // vocab é Vocabulario. Define que tokens considerar e ignorar.
 var vocab = []string{
-	"olá", "oi", "bom", "dia", "ei", "qual", "é", "o", "seu", "nome",
-	"quem", "você", "me", "dizer", "chamar", "como", "posso", "te",
-	"tchau", "até", "mais", "vejo", "tarde", "adeus", "ligar", "por", "favor",
-	"ligue", "alo", "se", "tarde",
+	"ligar", "desligar", "acender", "apagar",
+	"luz", "ventilador", "ar", "condicionado",
+	"como", "está", "temperatura", "hoje", "agora",
 }
 
 // classNames são as classes que desejamos utilizar para classificar sentenças.
-var classNames = []string{"saudação", "nome", "despedida"}
+var classNames = []string{
+	"comando_ligar",
+	"comando_desligar",
+	"comando_consulta",
+}
 
 // trainSentences são sentenças que utilizaremos para treinar a rede.
 var trainSentences = []string{
-	"olá", "oi", "bom dia", "ei", "alo",
-	"qual é o seu nome", "quem é você", "me dizer seu nome", "chamar", "como posso te chamar",
-	"tchau", "até mais", "te vejo mais tarde", "adeus", "te ligar mais tarde", "tarde",
+	"ligar a luz",
+	"acender o ventilador",
+	"ligar o ar condicionado",
+	"desligar a luz",
+	"apagar o ventilador",
+	"desligar o ar",
+	"como está a temperatura",
+	"qual é a temperatura agora",
+	"me diga a temperatura de hoje",
 }
 
 // trainLabels - etiquetas para classificarmos nossas sentenças de treinamento.
 var trainLabels = []int{
-	0, 0, 0, 0, 0,
-	1, 1, 1, 1, 1,
-	2, 2, 2, 2, 2, 2,
+	0, 0, 0,
+	1, 1, 1,
+	2, 2, 2,
 }
 
 // wordToIndex é o indexador dos tokens.
@@ -44,7 +53,7 @@ var wordToIndex = func() map[string]int {
 	return m
 }()
 
-// vectorize: função simples para demonstrar a ve.
+// vectorize: função simples para demonstrar a vetorização.
 func vectorize(text string) []float32 {
 	vec := make([]float32, len(vocab))
 	words := strings.FieldsFunc(strings.ToLower(text), func(r rune) bool {
@@ -60,6 +69,7 @@ func vectorize(text string) []float32 {
 	return vec
 }
 
+// argmax busca o id do maior valor na slice fornecida.
 func argmax(vals []float32) int {
 	maxIdx := 0
 	maxVal := vals[0]
@@ -125,13 +135,15 @@ func train() (biases *gorgonia.Node, weights *gorgonia.Node, err error) {
 	// valores normalizados.
 	pred := gorgonia.Must(gorgonia.SoftMax(logits))
 
-	// loss = -mean(y * log(pred))
-	// loss é a perda, ou a distância da resposta dada em relação ao resultado esperado
-	// menor perda => melhor resultado.
+	// Calculo da perda.
 	logPred := gorgonia.Must(gorgonia.Log(pred))
 	mul := gorgonia.Must(gorgonia.HadamardProd(Y, logPred))
 	sum := gorgonia.Must(gorgonia.Sum(mul))
 	neg := gorgonia.Must(gorgonia.Neg(sum))
+
+	// loss = -mean(y * log(pred))
+	// loss é a perda, ou a distância da resposta dada em relação ao resultado esperado
+	// menor perda => melhor resultado.
 	loss := gorgonia.Must(gorgonia.Div(neg, gorgonia.NewConstant(float32(numSamples))))
 
 	// Gradientes: indicam ao otimizador como ajustar os pesos para reduzir a perda.
@@ -220,21 +232,15 @@ func main() {
 	log.Println("====")
 
 	if err = predict([]string{
-		"seu nome, por favor?",
-		"Alo voce",
-		"como voce se chama?",
-		"como te chamas?",
-		"me ligue mais tarde",
-	}, b, w); err != nil {
-		log.Fatal(err)
-	}
-
-	log.Println("==== Essa aqui é ambigua!")
-
-	if err = predict([]string{
-		"posso te chamar mais tarde?",
-		"bom dia, como vai?",
-		"boa tarde, como vai?",
+		"pode ligar a luz?",          // comando_ligar
+		"acenda o ar condicionado",   // comando_ligar
+		"desligue o ventilador",      // comando_desligar
+		"apague o ar",                // comando_desligar
+		"qual a temperatura agora?",  // comando_consulta
+		"está quente hoje?",          // comando_consulta
+		"ligue o ventilador da sala", // comando_ligar
+		"desligar luz do quarto",     // comando_desligar
+		"me diga como está o clima",  // comando_consulta
 	}, b, w); err != nil {
 		log.Fatal(err)
 	}
