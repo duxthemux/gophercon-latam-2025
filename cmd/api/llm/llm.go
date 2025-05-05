@@ -99,7 +99,7 @@ func (s *Service) Query(ctx context.Context, q string, useCache bool) (ret *Resp
 	switch {
 	case strings.HasSuffix(ret.Response, "\nRAG"):
 		s.metricCantAnswer.Add(ctx, 1)
-	default:
+	case useCache && ret.Confidence > s.minConfidenceCache:
 		if err = s.cache.Add(ctx, q, ret.Response, ""); err != nil {
 			return nil, err
 		}
