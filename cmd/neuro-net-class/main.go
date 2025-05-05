@@ -93,7 +93,7 @@ func train() (biases *gorgonia.Node, weights *gorgonia.Node, err error) {
 	numSamples := len(trainSentences)
 	inputSize := len(vocab)
 
-	// Build input and target tensors
+	// Tensores de entrada e saída
 	Xdata := make([]float32, 0, numSamples*inputSize)
 	Ydata := make([]float32, 0, numSamples*numClasses)
 

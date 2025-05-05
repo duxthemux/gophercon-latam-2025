@@ -19,12 +19,18 @@ func (d dbTool) Query(ctx context.Context, params map[string]string) (ret string
 
 	iniDt, err := time.Parse(time.RFC3339, iniStr)
 	if err != nil {
-		return "", err
+		iniDt, err = time.Parse(time.RFC3339Nano, iniStr)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	endDt, err := time.Parse(time.RFC3339, endStr)
 	if err != nil {
-		return "", err
+		endDt, err = time.Parse(time.RFC3339Nano, endStr)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	rows, err := d.db.QueryContext(ctx,
@@ -53,8 +59,8 @@ func (d dbTool) Query(ctx context.Context, params map[string]string) (ret string
 			return "", err
 		}
 
-		sb.WriteString(fmt.Sprintf("%s: %v,", dt.String(), val))
+		sb.WriteString(fmt.Sprintf("%s: %v, ", dt.Format("02-01-2006"), val))
 	}
 
-	return strings.TrimSuffix(sb.String(), ","), nil
+	return strings.TrimSuffix(sb.String(), ", "), nil
 }
