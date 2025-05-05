@@ -173,6 +173,8 @@ func run(ctx context.Context, f *flags) (err error) {
 
 	span.End()
 
+	slog.Info("Server up and running ", "addr", l.Addr().String())
+
 	err = server.Serve(l)
 	if errors.Is(err, http.ErrServerClosed) {
 		return nil
