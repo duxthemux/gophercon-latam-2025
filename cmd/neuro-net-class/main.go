@@ -101,9 +101,10 @@ func train() (biases *gorgonia.Node, weights *gorgonia.Node, err error) {
 		Xdata = append(Xdata, vectorize(sentence)...)
 
 		for j := range numClasses {
-			if j == trainLabels[i] {
+			switch {
+			case j == trainLabels[i]:
 				Ydata = append(Ydata, 1)
-			} else {
+			default:
 				Ydata = append(Ydata, 0)
 			}
 		}

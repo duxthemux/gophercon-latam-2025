@@ -39,10 +39,12 @@ func cleanJson(s string) string {
 	return s
 }
 
-func (r *Response) LoadFromJson(s string) error {
+func loadFromJson(s string) (Response, error) {
 	s = cleanJson(s)
+	ret := Response{}
+	err := json.Unmarshal([]byte(s), &ret)
 
-	return json.Unmarshal([]byte(s), &r)
+	return ret, err
 }
 
 type Service struct {
@@ -66,7 +68,7 @@ type Service struct {
 	metricCantAnswer     metric.Int64Counter
 }
 
-func (s *Service) Query(ctx context.Context, q string, useCache bool) (ret *Response, err error) {
+func (s *Service) Query(ctx context.Context, q string, useCache bool) (ret Response, err error) {
 	ctx, span := s.tracer.Start(ctx, "llm.Query")
 	defer func() {
 		span.RecordError(err)
@@ -76,15 +78,15 @@ func (s *Service) Query(ctx context.Context, q string, useCache bool) (ret *Resp
 	if useCache {
 		response, err := s.checkCache(ctx, q)
 		if err != nil {
-			return nil, err
+			return Response{}, err
 		}
 
 		if response != "" {
 			if err = s.addCacheMetrics(ctx, span, q, response); err != nil {
-				return nil, err
+				return Response{}, err
 			}
 
-			return &Response{
+			return Response{
 				Type:     "FINAL",
 				Response: response,
 			}, nil
@@ -93,7 +95,7 @@ func (s *Service) Query(ctx context.Context, q string, useCache bool) (ret *Resp
 
 	ret, err = s.query(ctx, q)
 	if err != nil {
-		return nil, err
+		return Response{}, err
 	}
 
 	switch {
@@ -101,7 +103,7 @@ func (s *Service) Query(ctx context.Context, q string, useCache bool) (ret *Resp
 		s.metricCantAnswer.Add(ctx, 1)
 	case useCache && ret.Confidence > s.minConfidenceCache:
 		if err = s.cache.Add(ctx, q, ret.Response, ""); err != nil {
-			return nil, err
+			return Response{}, err
 		}
 	}
 
@@ -121,7 +123,7 @@ func New(options ...Option) *Service {
 //go:embed system.txt
 var system string
 
-func (s *Service) query(octx context.Context, q string) (*Response, error) {
+func (s *Service) query(octx context.Context, q string) (Response, error) {
 	ctx, span := s.tracer.Start(octx, "llm.query")
 	defer func() {
 		span.End()
@@ -131,7 +133,7 @@ func (s *Service) query(octx context.Context, q string) (*Response, error) {
 
 	ragResSet, err := s.rag.Query(ctx, q)
 	if err != nil {
-		return nil, err
+		return Response{}, err
 	}
 
 	sb := strings.Builder{}
@@ -147,7 +149,7 @@ func (s *Service) query(octx context.Context, q string) (*Response, error) {
 		case ragRes.Similarity > float32(s.minConfidenceTool) && ragRes.Metadata != nil && ragRes.Metadata["type"] == "TOOL":
 			ret, err := s.queryTool(ctx, q, ragRes.Metadata["name"])
 			if err != nil {
-				return nil, err
+				return Response{}, err
 			}
 
 			sb.WriteString(" - " + ret + "\n")
@@ -161,9 +163,10 @@ func (s *Service) query(octx context.Context, q string) (*Response, error) {
 		}
 	}
 
-	if len(sb.String()) > 0 {
+	switch {
+	case len(sb.String()) > 0:
 		sb.WriteString("Agora responda: " + q)
-	} else {
+	default:
 		sb.WriteString(q)
 	}
 
@@ -177,11 +180,11 @@ func (s *Service) query(octx context.Context, q string) (*Response, error) {
 		},
 	}
 
-	var ret *Response
+	var ret Response
 
 	respFunc := func(resp ollama_api.GenerateResponse) error {
-		svcResp := &Response{}
-		if err := svcResp.LoadFromJson(resp.Response); err != nil {
+		svcResp, err := loadFromJson(resp.Response)
+		if err != nil {
 			return err
 		}
 
@@ -193,11 +196,11 @@ func (s *Service) query(octx context.Context, q string) (*Response, error) {
 	s.logger.Debug("Generating LLM response", "query", q)
 
 	if err = s.ollama.Generate(ctx, ollamaReq, respFunc); err != nil {
-		return nil, err
+		return Response{}, err
 	}
 
 	if err := s.addLlmMetrics(ctx, span, q, ret.Response); err != nil {
-		return nil, err
+		return Response{}, err
 	}
 
 	return ret, nil
