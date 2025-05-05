@@ -143,7 +143,8 @@ func (s *Service) query(octx context.Context, q string) (*Response, error) {
 	span.AddEvent("rag returned", trace.WithAttributes(attribute.Int("results", len(ragResSet))))
 
 	for _, ragRes := range ragResSet {
-		if ragRes.Similarity > float32(s.minConfidenceTool) && ragRes.Metadata != nil && ragRes.Metadata["type"] == "TOOL" {
+		switch {
+		case ragRes.Similarity > float32(s.minConfidenceTool) && ragRes.Metadata != nil && ragRes.Metadata["type"] == "TOOL":
 			ret, err := s.queryTool(ctx, q, ragRes.Metadata["name"])
 			if err != nil {
 				return nil, err
@@ -152,9 +153,8 @@ func (s *Service) query(octx context.Context, q string) (*Response, error) {
 			sb.WriteString(" - " + ret + "\n")
 
 			continue
-		}
 
-		if ragRes.Similarity > float32(s.minConfidenceRag) {
+		case ragRes.Similarity > float32(s.minConfidenceRag):
 			prepareHeaderFunc()
 			s.logger.Debug("RAG: add responses", "query", q, "content", ragRes.Content, "similarity", ragRes.Similarity)
 			sb.WriteString(" - " + ragRes.Content + "\n")
@@ -223,7 +223,7 @@ func (s *Service) queryTool(octx context.Context, q string, tool string) (ret st
 		Prompt: sb.String(),
 		Stream: new(bool),
 		Options: map[string]any{
-			"temperature": 0.2,
+			"temperature": 0.0,
 		},
 	}
 

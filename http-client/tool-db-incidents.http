@@ -20,6 +20,6 @@ Content-Type: application/json
 
 {
   "details": false,
-  "query": "Qual foi a media de acidentes de trabalho no 1o semestre de 2024?",
+  "query": "Qual foi o total de acidentes de trabalho no 1o semestre de 2024?",
   "use_cache": false
 }
