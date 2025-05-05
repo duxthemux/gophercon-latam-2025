@@ -34,7 +34,7 @@ func (d dbTool) Query(ctx context.Context, params map[string]string) (ret string
 	}
 
 	rows, err := d.db.QueryContext(ctx,
-		"SELECT dt,value FROM kpis WHERE kpi = $1 and dt > $2 and dt < $3",
+		"SELECT dt,value FROM kpis WHERE kpi = $1 and dt >= $2 and dt <= $3 order by dt",
 		toolName, iniDt, endDt)
 	if err != nil {
 		return "", err
